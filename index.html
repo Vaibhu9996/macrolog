@@ -1089,12 +1089,15 @@ function openAdd(mealKey){
     sheet.querySelector('[data-act="close"]')?.addEventListener("click",closeSheet);
     // segmented
     sheet.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>{ addState.mode=b.dataset.mode; addState.view="search"; mount(); }));
-    // search
+    // search box + result picking — delegate on the list container so taps keep
+    // working as the results redraw on every keystroke
     const qIn=document.getElementById("qIn");
     if(qIn){ qIn.addEventListener("input",e=>{ addState.q=e.target.value; const rl=document.getElementById("resList"); if(rl) rl.innerHTML=results(addState.q); }); }
-    sheet.querySelectorAll("[data-pick]").forEach(b=>b.addEventListener("click",()=>{
+    const resList=document.getElementById("resList");
+    if(resList){ resList.addEventListener("click", e=>{
+      const b=e.target.closest("[data-pick]"); if(!b) return;
       const f=FOODS[+b.dataset.pick]; addState.picked=f; addState.qty=f.per==="piece"?1:100; addState.view="portion"; mount();
-    }));
+    }); }
     // custom add
     sheet.querySelector('[data-act="addCustom"]')?.addEventListener("click",()=>{
       const name=(document.getElementById("cf_name").value||"").trim(); if(!name) return;
