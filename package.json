@@ -1,0 +1,10 @@
+{
+  "name": "macrolog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MacroLog — a vegetarian macro & calorie tracker (static frontend + Vercel serverless function + Neon Postgres).",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0"
+  }
+}
