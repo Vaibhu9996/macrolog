@@ -1,17 +1,12 @@
 import { neon } from '@neondatabase/serverless';
+import { getSession, userKey } from '../lib/session.js';
 
 // Vercel's Neon integration injects DATABASE_URL automatically.
-// We fall back to a couple of other common names just in case.
 const CONN =
   process.env.DATABASE_URL ||
   process.env.POSTGRES_URL ||
   process.env.DATABASE_URL_UNPOOLED ||
   process.env.POSTGRES_URL_NON_POOLING;
-
-// Single-user app: everything is stored under one key. The optional
-// APP_PASSCODE env var gates access. (Swap USER for a per-account id
-// later if you ever want true multi-user.)
-const USER = 'me';
 
 let ready = false;
 async function ensureSchema(sql) {
@@ -27,55 +22,55 @@ async function ensureSchema(sql) {
   ready = true;
 }
 
-export default async function handler(req, res) {
-  // ---- lightweight passcode gate ----
-  const need = process.env.APP_PASSCODE;
-  if (need) {
-    const got = req.headers['x-passcode'];
-    if (got !== need) {
-      res.status(401).json({ error: 'unauthorized' });
-      return;
-    }
+// One-time: when the app owner first signs in with Google, carry over the data that was
+// saved under the old single-user ('me') setup so nothing is lost.
+async function migrateLegacyIfOwner(sql, session, USER) {
+  const owner = (process.env.OWNER_EMAIL || '').trim().toLowerCase();
+  if (!owner || (session.email || '').toLowerCase() !== owner) return false;
+  const legacy = await sql`SELECT k, v FROM app_state WHERE user_key = 'me'`;
+  if (!legacy.length) return false;
+  for (const r of legacy) {
+    await sql`
+      INSERT INTO app_state (user_key, k, v)
+      VALUES (${USER}, ${r.k}, ${JSON.stringify(r.v)}::jsonb)
+      ON CONFLICT (user_key, k) DO NOTHING`;
   }
+  return true;
+}
+
+export default async function handler(req, res) {
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: 'unauthorized' }); return; }
 
   if (!CONN) {
-    res.status(500).json({
-      error: 'no_database',
-      message: 'No database connection string found. Add a Postgres database in the Vercel Storage tab, then redeploy.',
-    });
+    res.status(500).json({ error: 'no_database', message: 'No database connection string found. Add a Postgres database in the Vercel Storage tab, then redeploy.' });
     return;
   }
 
   const sql = neon(CONN);
+  const USER = userKey(session);
+  const user = { email: session.email, name: session.name, picture: session.picture };
 
   try {
     await ensureSchema(sql);
 
-    // ---- read everything for this user ----
     if (req.method === 'GET') {
-      const rows = await sql`SELECT k, v FROM app_state WHERE user_key = ${USER}`;
+      let rows = await sql`SELECT k, v FROM app_state WHERE user_key = ${USER}`;
+      if (rows.length === 0 && (await migrateLegacyIfOwner(sql, session, USER))) {
+        rows = await sql`SELECT k, v FROM app_state WHERE user_key = ${USER}`;
+      }
       const data = {};
       for (const row of rows) data[row.k] = row.v;
-      res.status(200).json({ data });
+      res.status(200).json({ data, user });
       return;
     }
 
-    // ---- upsert one key, or a batch of { entries: { k: v, ... } } ----
     if (req.method === 'POST') {
       let body = req.body;
-      if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch { body = {}; }
-      }
+      if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
       body = body || {};
-      const entries =
-        body.entries ||
-        (body.key !== undefined ? { [body.key]: body.value } : null);
-
-      if (!entries) {
-        res.status(400).json({ error: 'bad_request' });
-        return;
-      }
-
+      const entries = body.entries || (body.key !== undefined ? { [body.key]: body.value } : null);
+      if (!entries) { res.status(400).json({ error: 'bad_request' }); return; }
       for (const [k, v] of Object.entries(entries)) {
         await sql`
           INSERT INTO app_state (user_key, k, v)
@@ -87,7 +82,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ---- delete one key ----
     if (req.method === 'DELETE') {
       const k = (req.query && req.query.key) || (req.body && req.body.key);
       if (k) await sql`DELETE FROM app_state WHERE user_key = ${USER} AND k = ${k}`;
