@@ -1,61 +1,83 @@
-# MacroLog — web app + database
+# MacroLog
 
-A vegetarian / eggetarian macro & calorie tracker. Same app we built before, now backed by a real database so your data **syncs across devices** and survives clearing your browser. Includes the calorie ring, macro bars, the calorie‑deficit bar with daily/weekly kg estimates, the ~70‑item food database, favorites, next‑meal suggestions, editable targets with Mifflin‑St Jeor recalculation, the end‑of‑day Summary, and a lightweight passcode lock.
+A vegetarian / eggetarian macro & calorie tracker you can share with friends. Google sign-in, per-user cloud storage, ~200-item Indian + restaurant food database (South Indian breakfasts, chutneys, Harvest Salad Co, Maiz, high-protein dishes), AI photo estimates, the calorie-deficit bar with daily/weekly kg projections, weekly trends, an end-of-day review, and editable targets.
 
 ## How it's built
 
 ```
-index.html      → the whole app (static page, no build step)
-api/kv.js        → one Vercel serverless function (read/write your data)
-package.json     → declares the @neondatabase/serverless dependency
+index.html          → the whole app (static page, no build step)
+api/kv.js            → read/write the signed-in user's data (Postgres)
+api/analyze.js       → photo → nutrition estimate (Claude vision)
+api/auth/login.js    → start Google sign-in
+api/auth/callback.js → finish Google sign-in, set session cookie
+api/auth/logout.js   → sign out
+api/auth/me.js       → who am I
+lib/session.js       → signed-cookie sessions shared by the functions
 ```
 
-The frontend keeps everything in a small in‑memory cache that loads once from `/api/kv` and writes changes back to Postgres. If the network is down it falls back to a copy saved on the device, so the app still opens.
+Each user's data lives under their own key in one Postgres table. Sessions are HMAC-signed cookies (no session table needed).
 
 ---
 
-## Deploy it (about 10 minutes, all free tiers)
+## Deploy (about 15 minutes, all free tiers)
 
-You'll need a free **GitHub** account and a free **Vercel** account. Pick one of the two paths below.
+### 1. Get the code on GitHub and Vercel
+- github.com → **New repository** → **uploading an existing file** → drag this whole folder in → commit.
+- vercel.com → **Add New… → Project** → import the repo → **Deploy**. No build settings to change.
+- Note your URL, e.g. `https://macrolog.vercel.app`.
 
-### Path A — GitHub + Vercel dashboard (recommended; auto‑deploys on every change)
+### 2. Add the database
+Project → **Storage** → **Create Database** → **Neon (Postgres)** → connect to this project. Vercel injects `DATABASE_URL` automatically. Tables create themselves on first use.
 
-1. **Put the code on GitHub.** Go to github.com → **New repository** → name it `macrolog` → create. On the next screen click **uploading an existing file**, then drag in everything from this `macrolog-app` folder (you can drag the folder itself in Chrome — it keeps the `api/` subfolder). Commit.
-2. **Import to Vercel.** Go to vercel.com → **Add New… → Project** → import your `macrolog` repo → **Deploy**. No build settings to change — Vercel serves `index.html` and turns `api/kv.js` into a function automatically.
-3. **Add the database.** Open your new project → **Storage** tab → **Create Database** → choose **Neon (Postgres)** → connect it to this project. Vercel injects the `DATABASE_URL` connection string for you. (The table is created automatically the first time the app saves anything — no migrations to run.)
-4. **Set a passcode (recommended).** Project → **Settings → Environment Variables** → add `APP_PASSCODE` = whatever you choose. Without this the app is open to anyone with the link.
-5. **Redeploy** so the new variables take effect: **Deployments** tab → the latest one → **⋯ → Redeploy**.
-6. **Open your URL** (`your‑project.vercel.app`), enter your passcode, and you're tracking. On iPhone, open it in **Safari → Share → Add to Home Screen** to get the full‑screen app icon.
+### 3. Create a Google sign-in client (about 5 min)
+1. Go to **console.cloud.google.com** → create a project (any name).
+2. **APIs & Services → OAuth consent screen** → *External* → fill in app name + your email → Save. Then click **Publish app** so anyone can sign in (the basic email/profile scopes don't need Google's review). If you leave it in *Testing*, only people you add as "test users" can sign in.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID** → *Web application*.
+   - **Authorized redirect URI:** `https://YOUR-APP.vercel.app/api/auth/callback` (use your real URL).
+4. Copy the **Client ID** and **Client secret**.
 
-### Path B — Vercel CLI (fastest, no GitHub)
+### 4. Set environment variables
+Project → **Settings → Environment Variables**. Add:
 
-```bash
-npm i -g vercel
-cd macrolog-app
-vercel            # follow the prompts to create + deploy the project
-```
+| Variable | Value |
+|---|---|
+| `GOOGLE_CLIENT_ID` | from step 3 |
+| `GOOGLE_CLIENT_SECRET` | from step 3 |
+| `SESSION_SECRET` | any long random string (32+ chars). On a Mac: `openssl rand -hex 32` |
+| `OWNER_EMAIL` | **your** Google email — carries your existing data over on first sign-in |
+| `ANTHROPIC_API_KEY` | for photo estimates — from console.anthropic.com (see below) |
+| `ALLOWED_EMAILS` | *optional* — comma-separated list; if set, only these addresses can sign in |
+| `ANALYZE_MODEL` | *optional* — defaults to `claude-sonnet-5` |
 
-Then do **steps 3–5 above** in the Vercel dashboard (add the Neon database, set `APP_PASSCODE`), and run `vercel --prod` to push the final version.
+Then **Deployments → latest → ⋯ → Redeploy** so the variables take effect. (The old `APP_PASSCODE` is no longer used and can be deleted.)
+
+### 5. Open it and sign in
+Visit your URL → **Continue with Google**. On iPhone: Safari → **Share → Add to Home Screen** for the full-screen app.
+
+Share the same URL with anyone you want to use it — they sign in with their own Google account and get their own private log.
 
 ---
 
-## Your data
+## Photo estimates
+In **Add → Photo**, take or choose a picture. It's sent to Claude's vision model, which returns a name, portion, calories and macros that pre-fill the form. Add a hint ("2 idlis with coconut chutney") to sharpen it, and **edit every value before saving**. A photo can't see hidden oil or exact portions, so treat it as a strong starting point, not a measurement. Each analysis costs a fraction of a rupee on your Anthropic account.
 
-- Lives in **Postgres (Neon)** in a single table `app_state`, keyed per user. One row per day plus your targets, maintenance value, and favorites.
-- **Synced**: open the same URL on your phone and laptop and you'll see the same data.
-- **Backup / inspection**: in the Vercel Storage tab, click **Open in Neon** to browse or export the table.
-- **Offline**: if the database can't be reached, the app uses the last copy saved on that device and resumes syncing when it's back. (For that reason it works best online; changes made while fully offline may not sync.)
+## Your data & access
+- Stored in Postgres (Neon), one row per key per user. Browse it via **Storage → Open in Neon**.
+- Signing in with **`OWNER_EMAIL`** for the first time copies everything logged under the old passcode version into your account. Set it *before* your first sign-in.
+- **`ALLOWED_EMAILS`** empty → anyone with a Google account can use the app. Set it to lock it down.
+- Sessions last 30 days; **Sign out** is on the Targets tab.
+- Works best online. If the server can't be reached the app shows the last copy saved on that device.
 
-## Changing things
-
-- **Passcode** — update the `APP_PASSCODE` env var in Vercel and redeploy.
-- **Targets / maintenance** — edit them in the app under the **Targets** tab; they save to the database like everything else.
-- **Multi‑user later** — `api/kv.js` stores everything under a single user key (`'me'`). To support separate accounts, replace that with a real per‑user id once you add proper sign‑in.
+## Common snags
+- **"redirect_uri_mismatch"** from Google → the redirect URI in Google Cloud must exactly equal `https://YOUR-APP.vercel.app/api/auth/callback`.
+- **"Access blocked / app not verified"** → publish the OAuth consent screen (step 3.2) or add the person as a test user.
+- **Photo tab says not set up** → `ANTHROPIC_API_KEY` is missing; add it and redeploy.
+- **Signed in but no history** → `OWNER_EMAIL` didn't match the Google account you used (case-insensitive, but must be the same address).
 
 ## Local development (optional)
-
 ```bash
 npm install
-# put your Neon connection string in a .env file as DATABASE_URL=...
-npx vercel dev          # runs the static page + the function locally
+# .env with DATABASE_URL, SESSION_SECRET, GOOGLE_CLIENT_ID/SECRET, ANTHROPIC_API_KEY
+# add http://localhost:3000/api/auth/callback as a second redirect URI in Google Cloud
+npx vercel dev
 ```

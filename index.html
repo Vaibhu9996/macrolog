@@ -289,6 +289,32 @@ select{appearance:none;-webkit-appearance:none;
 .lock-input{width:100%;background:#F2F3F6;border:1.5px solid transparent;border-radius:14px;padding:14px 16px;font-size:17px;text-align:center;letter-spacing:.12em;outline:none;color:var(--ink);margin-bottom:10px;}
 .lock-input:focus{border-color:var(--brand);background:#fff;}
 .lock-err{font-size:12.5px;color:var(--red);min-height:16px;margin-bottom:10px;font-weight:500;}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#fff;border:1.5px solid #E2E3EA;color:var(--ink);font-weight:600;font-size:15px;padding:14px;border-radius:15px;text-decoration:none;box-shadow:var(--sh-sm);}
+.lock-fine{font-size:11.5px;color:var(--faint);margin-top:4px;}
+
+/* ── account ── */
+.acct{display:flex;align-items:center;gap:13px;}
+.acct-pic{width:46px;height:46px;border-radius:99px;object-fit:cover;flex-shrink:0;background:var(--brand-soft);}
+.acct-fallback{display:grid;place-items:center;color:var(--brand);font-weight:700;font-size:18px;font-family:var(--ff-d);}
+.acct-name{font-size:15px;font-weight:700;}
+.acct-email{font-size:12.5px;color:var(--muted);margin-top:1px;word-break:break-all;}
+a.btn-ghost{text-decoration:none;}
+
+/* ── photo estimate ── */
+.seg button svg{vertical-align:-2px;margin-right:3px;}
+.photo-wrap{display:flex;flex-direction:column;}
+.photo-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--brand-soft);border:1.5px dashed #C9C4F5;border-radius:18px;padding:28px 18px;text-align:center;cursor:pointer;}
+.photo-drop-ico{width:56px;height:56px;border-radius:16px;background:#fff;color:var(--brand);display:grid;place-items:center;box-shadow:var(--sh-sm);margin-bottom:4px;}
+.photo-drop-t{font-size:15.5px;font-weight:700;color:var(--ink);}
+.photo-drop-s{font-size:12.5px;color:var(--muted);line-height:1.4;}
+.photo-prev{width:100%;max-height:220px;object-fit:cover;border-radius:16px;margin-bottom:14px;background:#F0F1F5;display:block;}
+.photo-status{display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:600;color:var(--ink2);padding:6px 0;}
+.spin{width:18px;height:18px;border-radius:99px;border:2.5px solid var(--brand-soft);border-top-color:var(--brand);animation:spin .8s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.photo-fine{font-size:11.5px;color:var(--faint);text-align:center;margin-top:10px;line-height:1.45;}
+.photo-err{background:var(--red-soft);color:#C9304A;font-size:13.5px;font-weight:500;padding:12px 14px;border-radius:13px;margin-bottom:14px;line-height:1.45;}
+.photo-conf{font-size:12px;font-weight:600;padding:8px 12px;border-radius:10px;margin-bottom:14px;text-align:center;}
+.photo-note{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink2);background:#F8F8FB;border-radius:12px;padding:10px 12px;margin-bottom:14px;line-height:1.45;}
 </style>
 </head>
 <body>
@@ -325,7 +351,11 @@ const MEAL_BY = Object.fromEntries(MEALS.map(m=>[m.key,m]));
 const TAG_STYLE = {
   indian:{bg:"#FDF0DA",c:"#B5791A"}, western:{bg:"#E6EFFF",c:"#2E6BD6"},
   egg:{bg:"#FDE8E8",c:"#C9304A"}, coffee:{bg:"#EEEAE6",c:"#7A6A55"},
+  south:{bg:"#FDECD6",c:"#B85C1A"}, chutney:{bg:"#F2EEE3",c:"#7D6B3A"},
+  hsc:{bg:"#E0F5EE",c:"#0E8A5F"}, maiz:{bg:"#FDE6DE",c:"#C24A2B"},
+  protein:{bg:"#E4F7EF",c:"#137A55"},
 };
+const TAG_LABEL = { indian:"Indian", western:"Western", egg:"Egg", coffee:"Coffee", south:"S. Indian", chutney:"Chutney", hsc:"Harvest", maiz:"Maiz", protein:"Protein" };
 
 /* values per 100g unless per:"piece". vegetarian / eggetarian */
 const FOODS = [
@@ -399,26 +429,170 @@ const FOODS = [
   {name:"Paneer Wrap / Roll",per:"piece",cal:380,p:16,c:40,f:18,fib:3,tag:"indian"},
   {name:"Falafel (3 pcs)",per:"piece",cal:200,p:8,c:18,f:11,fib:5,tag:"western"},
   {name:"Hummus (2 tbsp)",per:"piece",cal:70,p:2,c:6,f:4.5,fib:2,tag:"western"},
+
+  /* ── South Indian breakfast ── */
+  {name:"Rava Idli",per:"piece",cal:90,p:2.5,c:15,f:2,fib:1,tag:"south"},
+  {name:"Medu Vada",per:"piece",cal:150,p:4,c:18,f:7,fib:2,tag:"south"},
+  {name:"Masala Vada (Paruppu Vada)",per:"piece",cal:130,p:5,c:14,f:6,fib:3,tag:"south"},
+  {name:"Set Dosa",per:"piece",cal:120,p:3,c:20,f:3,fib:1,tag:"south"},
+  {name:"Ghee Roast Dosa",per:"piece",cal:230,p:4,c:30,f:10,fib:1.5,tag:"south"},
+  {name:"Rava Dosa",per:"piece",cal:180,p:3.5,c:26,f:6,fib:1.5,tag:"south"},
+  {name:"Neer Dosa",per:"piece",cal:80,p:1.5,c:16,f:1,fib:0.5,tag:"south"},
+  {name:"Onion Uttapam",per:"piece",cal:200,p:5,c:30,f:6,fib:2.5,tag:"south"},
+  {name:"Tomato / Veg Uttapam",per:"piece",cal:190,p:5,c:29,f:5.5,fib:3,tag:"south"},
+  {name:"Pesarattu (moong dosa)",per:"piece",cal:150,p:8,c:20,f:4,fib:4,tag:"south"},
+  {name:"Adai (lentil dosa)",per:"piece",cal:170,p:8,c:24,f:5,fib:5,tag:"south"},
+  {name:"Upma (1 bowl)",per:"piece",cal:250,p:5,c:40,f:8,fib:3,tag:"south"},
+  {name:"Ven Pongal (1 bowl)",per:"piece",cal:320,p:8,c:45,f:11,fib:3,tag:"south"},
+  {name:"Sweet Pongal (1 bowl)",per:"piece",cal:350,p:5,c:60,f:10,fib:2,tag:"south"},
+  {name:"Appam",per:"piece",cal:120,p:2,c:22,f:2.5,fib:1,tag:"south"},
+  {name:"Puttu (1 cup)",per:"piece",cal:200,p:4,c:40,f:2,fib:3,tag:"south"},
+  {name:"Idiyappam (3 pcs)",per:"piece",cal:180,p:3,c:38,f:1,fib:2,tag:"south"},
+  {name:"Kuzhi Paniyaram (4 pcs)",per:"piece",cal:200,p:5,c:30,f:6,fib:2,tag:"south"},
+  {name:"Poori",per:"piece",cal:130,p:2.5,c:15,f:7,fib:1,tag:"south"},
+  {name:"Poori + Potato Masala (2 poori)",per:"piece",cal:400,p:7,c:50,f:18,fib:4,tag:"south"},
+  {name:"Kesari Bath (1 bowl)",per:"piece",cal:300,p:3,c:55,f:8,fib:1,tag:"south"},
+  {name:"Bisi Bele Bath (1 bowl)",per:"piece",cal:380,p:10,c:55,f:12,fib:7,tag:"south"},
+  {name:"Curd Rice (1 bowl)",per:"piece",cal:300,p:8,c:45,f:8,fib:1,tag:"south"},
+  {name:"Lemon Rice (1 bowl)",per:"piece",cal:330,p:6,c:55,f:9,fib:2,tag:"south"},
+  {name:"Tamarind Rice / Puliyodarai (1 bowl)",per:"piece",cal:350,p:6,c:58,f:10,fib:3,tag:"south"},
+  {name:"Sambar Rice (1 bowl)",per:"piece",cal:350,p:10,c:55,f:9,fib:7,tag:"south"},
+  {name:"Sambar (1 bowl)",per:"piece",cal:120,p:6,c:18,f:3,fib:5,tag:"south"},
+  {name:"Rasam (1 bowl)",per:"piece",cal:50,p:2,c:8,f:1.5,fib:1,tag:"south"},
+
+  /* ── Chutneys & accompaniments — the hidden calorie drivers ── */
+  {name:"Coconut Chutney (2 tbsp)",per:"piece",cal:90,p:1.5,c:4,f:8,fib:1.5,tag:"chutney"},
+  {name:"Tomato Chutney (2 tbsp)",per:"piece",cal:50,p:1,c:6,f:3,fib:1,tag:"chutney"},
+  {name:"Peanut Chutney (2 tbsp)",per:"piece",cal:110,p:4,c:6,f:9,fib:1.5,tag:"chutney"},
+  {name:"Onion / Kara Chutney (2 tbsp)",per:"piece",cal:60,p:1,c:7,f:3.5,fib:1,tag:"chutney"},
+  {name:"Green Mint-Coriander Chutney (2 tbsp)",per:"piece",cal:25,p:1,c:4,f:0.5,fib:1,tag:"chutney"},
+  {name:"Ginger Chutney / Allam Pachadi (2 tbsp)",per:"piece",cal:70,p:1,c:10,f:3,fib:1,tag:"chutney"},
+  {name:"Molagapodi with oil/ghee (1 tbsp)",per:"piece",cal:90,p:3,c:6,f:6,fib:2,tag:"chutney"},
+  {name:"Molagapodi dry (1 tbsp)",per:"piece",cal:45,p:3,c:5,f:1.5,fib:2,tag:"chutney"},
+  {name:"Sweet Tamarind Chutney (2 tbsp)",per:"piece",cal:80,p:0.5,c:20,f:0,fib:1,tag:"chutney"},
+  {name:"Dry Garlic Chutney (1 tbsp)",per:"piece",cal:40,p:1,c:4,f:2.5,fib:1,tag:"chutney"},
+  {name:"Pickle / Achar (1 tbsp)",per:"piece",cal:40,p:0.3,c:3,f:3,fib:0.5,tag:"chutney"},
+  {name:"Raita (1 bowl)",per:"piece",cal:90,p:4,c:8,f:4,fib:1,tag:"chutney"},
+  {name:"Ghee (1 tsp)",per:"piece",cal:45,p:0,c:0,f:5,fib:0,tag:"chutney"},
+  {name:"Butter (1 tsp)",per:"piece",cal:35,p:0,c:0,f:4,fib:0,tag:"chutney"},
+  {name:"Coconut Oil (1 tsp)",per:"piece",cal:40,p:0,c:0,f:4.5,fib:0,tag:"chutney"},
+  {name:"Sugar (1 tsp)",per:"piece",cal:16,p:0,c:4,f:0,fib:0,tag:"chutney"},
+  {name:"Jaggery (1 tbsp)",per:"piece",cal:60,p:0,c:15,f:0,fib:0,tag:"chutney"},
+  {name:"Honey (1 tbsp)",per:"piece",cal:64,p:0,c:17,f:0,fib:0,tag:"chutney"},
+
+  /* ── Harvest Salad Co — veg, estimated per full portion ── */
+  {name:"HSC Avo Crunch Salad",per:"piece",cal:420,p:9,c:24,f:32,fib:9,tag:"hsc"},
+  {name:"HSC Beets by Dre Salad",per:"piece",cal:380,p:11,c:30,f:24,fib:8,tag:"hsc"},
+  {name:"HSC Seoul Salad (tofu)",per:"piece",cal:360,p:16,c:28,f:20,fib:7,tag:"hsc"},
+  {name:"HSC Spanish Temple Salad",per:"piece",cal:340,p:8,c:32,f:20,fib:8,tag:"hsc"},
+  {name:"HSC Classic Caesar (grilled paneer)",per:"piece",cal:420,p:20,c:22,f:28,fib:4,tag:"hsc"},
+  {name:"HSC Mediterranean Falafel Salad",per:"piece",cal:450,p:14,c:38,f:26,fib:9,tag:"hsc"},
+  {name:"HSC Korean Kimchi Paneer Salad",per:"piece",cal:380,p:18,c:22,f:24,fib:5,tag:"hsc"},
+  {name:"HSC Mediterranean Bowl (veg)",per:"piece",cal:520,p:16,c:60,f:22,fib:10,tag:"hsc"},
+  {name:"HSC Bahn Mi Vietnamese Bowl (veg)",per:"piece",cal:500,p:14,c:62,f:20,fib:7,tag:"hsc"},
+  {name:"HSC Satay Thai Bowl (tofu)",per:"piece",cal:540,p:18,c:58,f:24,fib:7,tag:"hsc"},
+  {name:"HSC Mushroom Melt Panini",per:"piece",cal:480,p:18,c:48,f:22,fib:4,tag:"hsc"},
+  {name:"HSC Chipotle Paneer & Mozzarella Panini",per:"piece",cal:560,p:26,c:48,f:28,fib:4,tag:"hsc"},
+  {name:"HSC Veggie Marinara Panini",per:"piece",cal:470,p:16,c:52,f:20,fib:5,tag:"hsc"},
+  {name:"HSC Pesto Avocado Panini",per:"piece",cal:520,p:14,c:46,f:30,fib:6,tag:"hsc"},
+  {name:"HSC Vegan Rainbow Wrap",per:"piece",cal:450,p:12,c:58,f:18,fib:9,tag:"hsc"},
+  {name:"HSC Avo Chipotle Wrap",per:"piece",cal:500,p:12,c:52,f:26,fib:8,tag:"hsc"},
+  {name:"HSC Soft Shell Tacos (2, veg)",per:"piece",cal:360,p:12,c:42,f:15,fib:6,tag:"hsc"},
+  {name:"HSC Quesadilla (veg)",per:"piece",cal:520,p:20,c:48,f:26,fib:4,tag:"hsc"},
+  {name:"HSC Avocado Open Toast",per:"piece",cal:320,p:8,c:32,f:18,fib:6,tag:"hsc"},
+
+  /* ── Maiz Mexican Kitchen — veg, estimated per full portion ── */
+  {name:"Maiz Burrito Bowl — Chipotle Paneer",per:"piece",cal:620,p:26,c:68,f:26,fib:12,tag:"maiz"},
+  {name:"Maiz Burrito Bowl — Grilled Mushroom",per:"piece",cal:520,p:16,c:70,f:18,fib:12,tag:"maiz"},
+  {name:"Maiz Burrito Bowl — Tofu",per:"piece",cal:560,p:22,c:68,f:20,fib:12,tag:"maiz"},
+  {name:"Maiz Burrito Bowl — Chickpea Bullets",per:"piece",cal:600,p:18,c:78,f:22,fib:14,tag:"maiz"},
+  {name:"Maiz Burrito Bowl — Fajita Veg & Beans",per:"piece",cal:480,p:15,c:72,f:14,fib:14,tag:"maiz"},
+  {name:"Maiz Burrito Wrap — Paneer",per:"piece",cal:720,p:28,c:82,f:30,fib:10,tag:"maiz"},
+  {name:"Maiz Burrito Wrap — Mushroom",per:"piece",cal:620,p:18,c:84,f:22,fib:10,tag:"maiz"},
+  {name:"Maiz Mexican Salad — Paneer",per:"piece",cal:480,p:24,c:34,f:28,fib:10,tag:"maiz"},
+  {name:"Maiz Mexican Salad — Tofu",per:"piece",cal:430,p:20,c:34,f:24,fib:10,tag:"maiz"},
+  {name:"Maiz Quesadilla — Paneer",per:"piece",cal:580,p:26,c:50,f:30,fib:4,tag:"maiz"},
+  {name:"Maiz Quesadilla — Mushroom",per:"piece",cal:500,p:20,c:50,f:24,fib:4,tag:"maiz"},
+  {name:"Maiz Hard Shell Tacos (2, veg)",per:"piece",cal:380,p:12,c:40,f:18,fib:6,tag:"maiz"},
+  {name:"Maiz Soft Shell Tacos (2, veg)",per:"piece",cal:360,p:12,c:42,f:15,fib:6,tag:"maiz"},
+  {name:"Maiz Little Bowl (veg)",per:"piece",cal:320,p:12,c:42,f:11,fib:7,tag:"maiz"},
+  {name:"Maiz Little Wrap (veg)",per:"piece",cal:380,p:13,c:48,f:14,fib:6,tag:"maiz"},
+  {name:"Maiz Keto Bowl (paneer, no rice)",per:"piece",cal:450,p:28,c:18,f:32,fib:8,tag:"maiz"},
+  {name:"Maiz Vegan Bowl",per:"piece",cal:500,p:16,c:68,f:18,fib:14,tag:"maiz"},
+  {name:"Maiz Nachos (veg)",per:"piece",cal:650,p:16,c:70,f:34,fib:8,tag:"maiz"},
+  {name:"Maiz Guacamole (side)",per:"piece",cal:120,p:1.5,c:7,f:10,fib:5,tag:"maiz"},
+  {name:"Maiz Sour Cream (side)",per:"piece",cal:60,p:1,c:2,f:6,fib:0,tag:"maiz"},
+  {name:"Maiz Black Beans (side)",per:"piece",cal:130,p:8,c:22,f:1,fib:8,tag:"maiz"},
+  {name:"Maiz Cilantro Lime Rice (side)",per:"piece",cal:220,p:4,c:46,f:3,fib:1,tag:"maiz"},
+  {name:"Maiz Churros (2 pcs)",per:"piece",cal:300,p:4,c:40,f:14,fib:1,tag:"maiz"},
+
+  /* ── High-protein dishes ── */
+  {name:"Paneer Bhurji (1 bowl)",per:"piece",cal:330,p:20,c:8,f:25,fib:2,tag:"protein"},
+  {name:"Palak Paneer (1 bowl)",per:"piece",cal:320,p:16,c:14,f:24,fib:4,tag:"protein"},
+  {name:"Kadai Paneer (1 bowl)",per:"piece",cal:340,p:16,c:16,f:26,fib:4,tag:"protein"},
+  {name:"Matar Paneer (1 bowl)",per:"piece",cal:330,p:15,c:22,f:22,fib:6,tag:"protein"},
+  {name:"Shahi Paneer (1 bowl)",per:"piece",cal:400,p:15,c:18,f:32,fib:3,tag:"protein"},
+  {name:"Low-fat Paneer",per:100,cal:200,p:22,c:5,f:10,fib:0,tag:"protein"},
+  {name:"Paneer Paratha",per:"piece",cal:330,p:12,c:36,f:15,fib:3,tag:"protein"},
+  {name:"Egg Curry (2 eggs)",per:"piece",cal:300,p:14,c:10,f:22,fib:2,tag:"protein"},
+  {name:"Veg Omelette (2 eggs)",per:"piece",cal:210,p:13,c:3,f:16,fib:0.5,tag:"protein"},
+  {name:"Masala Omelette (2 eggs)",per:"piece",cal:220,p:13,c:5,f:16,fib:1,tag:"protein"},
+  {name:"Scrambled Eggs (2)",per:"piece",cal:200,p:13,c:2,f:15,fib:0,tag:"protein"},
+  {name:"Egg White Omelette (4 whites)",per:"piece",cal:90,p:15,c:1,f:1.5,fib:0,tag:"protein"},
+  {name:"Egg Paratha",per:"piece",cal:300,p:12,c:32,f:13,fib:3,tag:"protein"},
+  {name:"Egg Fried Rice (1 plate)",per:"piece",cal:450,p:16,c:62,f:14,fib:3,tag:"protein"},
+  {name:"Soya Chunks Curry (1 bowl)",per:"piece",cal:250,p:22,c:15,f:10,fib:6,tag:"protein"},
+  {name:"Soya Keema (1 bowl)",per:"piece",cal:260,p:24,c:14,f:11,fib:6,tag:"protein"},
+  {name:"Tofu Stir-fry (1 bowl)",per:"piece",cal:280,p:22,c:12,f:16,fib:4,tag:"protein"},
+  {name:"Tofu Scramble (1 bowl)",per:"piece",cal:240,p:20,c:8,f:15,fib:3,tag:"protein"},
+  {name:"Tempeh",per:100,cal:190,p:19,c:9,f:11,fib:6,tag:"protein"},
+  {name:"Moong Dal Chilla (2 pcs)",per:"piece",cal:220,p:12,c:30,f:5,fib:6,tag:"protein"},
+  {name:"Besan Chilla (2 pcs)",per:"piece",cal:240,p:11,c:28,f:9,fib:6,tag:"protein"},
+  {name:"Sprouts Salad (1 bowl)",per:"piece",cal:150,p:9,c:24,f:2,fib:8,tag:"protein"},
+  {name:"Chana Chaat (1 bowl)",per:"piece",cal:220,p:10,c:35,f:4,fib:10,tag:"protein"},
+  {name:"Rajma Curry (1 bowl)",per:"piece",cal:250,p:13,c:40,f:4,fib:12,tag:"protein"},
+  {name:"Chole / Chana Masala (1 bowl)",per:"piece",cal:280,p:12,c:42,f:8,fib:11,tag:"protein"},
+  {name:"Dal Fry (1 bowl)",per:"piece",cal:230,p:12,c:32,f:6,fib:8,tag:"protein"},
+  {name:"Moong Dal (1 bowl)",per:"piece",cal:200,p:14,c:30,f:3,fib:9,tag:"protein"},
+  {name:"Masoor Dal (1 bowl)",per:"piece",cal:210,p:13,c:32,f:3,fib:9,tag:"protein"},
+  {name:"Chana Dal (1 bowl)",per:"piece",cal:240,p:13,c:36,f:4,fib:10,tag:"protein"},
+  {name:"Lentil Soup (1 bowl)",per:"piece",cal:180,p:11,c:28,f:3,fib:9,tag:"protein"},
+  {name:"Hung Curd",per:100,cal:100,p:10,c:5,f:4,fib:0,tag:"protein"},
+  {name:"Protein Shake (whey + 250ml milk)",per:"piece",cal:250,p:32,c:15,f:6,fib:0,tag:"protein"},
+  {name:"Protein Bar",per:"piece",cal:200,p:20,c:22,f:6,fib:3,tag:"protein"},
+  {name:"Peanut Butter Toast (2 slices)",per:"piece",cal:350,p:14,c:34,f:18,fib:5,tag:"protein"},
+  {name:"Edamame (1 cup)",per:"piece",cal:190,p:17,c:15,f:8,fib:8,tag:"protein"},
+  {name:"Roasted Chana (30g)",per:"piece",cal:110,p:6,c:17,f:2,fib:5,tag:"protein"},
+  {name:"Peanuts (30g)",per:"piece",cal:170,p:7,c:5,f:14,fib:2.5,tag:"protein"},
+  {name:"Mixed Nuts (30g)",per:"piece",cal:180,p:6,c:6,f:16,fib:2.5,tag:"protein"},
+  {name:"Pumpkin Seeds (30g)",per:"piece",cal:160,p:9,c:4,f:13,fib:2,tag:"protein"},
+  {name:"Flax Seeds (1 tbsp)",per:"piece",cal:55,p:2,c:3,f:4.5,fib:3,tag:"protein"},
+  {name:"Dhokla (4 pcs)",per:"piece",cal:200,p:8,c:32,f:4,fib:3,tag:"protein"},
+  {name:"Methi Thepla",per:"piece",cal:120,p:3,c:18,f:4,fib:2,tag:"indian"},
+  {name:"Aloo Paratha",per:"piece",cal:290,p:6,c:40,f:11,fib:3,tag:"indian"},
 ];
 
-/* ───────────────── storage (database-backed, with offline mirror) ───────────────── */
+/* ───────────────── storage (database-backed, per-user, with offline mirror) ───────────────── */
 const NS = "macrolog:";
 const API = "/api/kv";
 let cache = {};
 let offline = false;
-function getPass(){ try{ return localStorage.getItem(NS+"passcode")||""; }catch(e){ return ""; } }
-function setPass(p){ try{ localStorage.setItem(NS+"passcode", p); }catch(e){} }
-function readMirror(){ try{ const r=localStorage.getItem(NS+"mirror"); return r?JSON.parse(r):{}; }catch(e){ return {}; } }
-function writeMirror(){ try{ localStorage.setItem(NS+"mirror", JSON.stringify(cache)); }catch(e){} }
+function lastUser(){ try{ return localStorage.getItem(NS+"lastUser")||""; }catch(e){ return ""; } }
+function mirrorKey(u){ return NS+"mirror:"+(u||lastUser()||"anon"); }
+function readMirror(){ try{ const r=localStorage.getItem(mirrorKey()); return r?JSON.parse(r):{}; }catch(e){ return {}; } }
+function writeMirror(){ try{ localStorage.setItem(mirrorKey(state.user&&state.user.email), JSON.stringify(cache)); }catch(e){} }
+function forgetLocal(){ try{ const u=lastUser(); if(u) localStorage.removeItem(NS+"mirror:"+u); localStorage.removeItem(NS+"lastUser"); }catch(e){} }
 const store = {
-  // Load the whole dataset once from the database into an in-memory cache.
+  // Load the signed-in user's whole dataset once into an in-memory cache.
   async load(){
     try{
-      const r = await fetch(API, { headers:{ "x-passcode":getPass() } });
-      if(r.status===401) return "unauthorized";
+      const r = await fetch(API, { credentials:"same-origin" });
+      if(r.status===401){ forgetLocal(); return "unauthorized"; }
       if(!r.ok) throw new Error("http "+r.status);
       const j = await r.json();
       cache = j.data || {};
+      state.user = j.user || null;
+      try{ if(state.user) localStorage.setItem(NS+"lastUser", state.user.email); }catch(e){}
       writeMirror(); offline = false;
       return "ok";
     }catch(e){
@@ -426,13 +600,12 @@ const store = {
       return "offline";
     }
   },
-  // Synchronous read from cache (the rest of the app stays unchanged).
   get(k){ return (k in cache) ? cache[k] : null; },
-  // Write-through: update cache + device mirror immediately, push to the database in the background.
+  // Write-through: update cache + device mirror now, push to the database in the background.
   set(k,v){
     cache[k] = v; writeMirror();
-    fetch(API, { method:"POST", headers:{ "Content-Type":"application/json", "x-passcode":getPass() }, body:JSON.stringify({ key:k, value:v }) })
-      .then(r=>{ offline = !r.ok; }).catch(()=>{ offline = true; });
+    fetch(API, { method:"POST", credentials:"same-origin", headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ key:k, value:v }) })
+      .then(r=>{ offline = !r.ok; if(r.status===401) location.reload(); }).catch(()=>{ offline = true; });
   },
 };
 
@@ -484,10 +657,11 @@ const ICONS = {
   edit:s=>I('<path d="M4 6h10M4 12h7M4 18h12"/><circle cx="18" cy="6" r="2.2"/><circle cx="15" cy="12" r="2.2"/><circle cx="20" cy="18" r="2.2"/>',s),
   trophy:s=>I('<path d="M7 4h10v4a5 5 0 01-10 0V4zM7 6H4v1a3 3 0 003 3M17 6h3v1a3 3 0 01-3 3M9 17h6M10 21h4M12 17v4"/>',s),
   bulb:s=>I('<path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.6.6 1 1.3 1 2.1V16h6v-.4c0-.8.4-1.5 1-2.1A6 6 0 0012 3z"/>',s),
+  camera:s=>I('<path d="M4 8h3l2-3h6l2 3h3a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.5"/>',s),
 };
 
 /* ───────────────── state ───────────────── */
-const state = { date:todayKey(), day:emptyDay(), targets:{...DEFAULT_TARGETS}, maintenance:DEFAULT_MAINTENANCE, favorites:[], tab:"today" };
+const state = { date:todayKey(), day:emptyDay(), targets:{...DEFAULT_TARGETS}, maintenance:DEFAULT_MAINTENANCE, favorites:[], tab:"today", user:null };
 
 function loadDay(){ state.day = store.get("day:"+state.date) || emptyDay(); }
 function saveDay(){ store.set("day:"+state.date, state.day); }
@@ -962,13 +1136,23 @@ function renderSettings(){
       <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:13px;line-height:1.5">Uses the Mifflin-St Jeor formula. Review the numbers on the Set manually tab before saving.</p>`;
   }
 
+  const u=state.user;
+  const accountCard = u ? `<div class="card">
+      <div class="sec-label">Account</div>
+      <div class="acct">
+        ${u.picture?`<img class="acct-pic" src="${esc(u.picture)}" alt="" referrerpolicy="no-referrer">`:`<div class="acct-pic acct-fallback">${esc(String(u.name||u.email||"?").charAt(0).toUpperCase())}</div>`}
+        <div class="acct-info"><div class="acct-name">${esc(u.name||"Signed in")}</div><div class="acct-email">${esc(u.email||"")}</div></div>
+      </div>
+      <a class="btn-ghost pressable" href="/api/auth/logout" style="margin-top:8px">Sign out</a>
+    </div>` : "";
   document.getElementById("screen").innerHTML=`
     <div class="topbar"><div><div class="eyebrow">Your daily goals</div><div class="h-title">Targets</div></div></div>
     <div class="card">${tabBtns}${body}</div>
+    ${accountCard}
     <div class="card">
       <div class="sec-label">${ICONS.cal(13)} About this app</div>
       <div class="about">
-        <b>MacroLog runs entirely on your device.</b> Everything you log is saved locally on your phone — no account, no cloud, no sign-in. That also means it won't sync to other devices, and clearing your browser data will erase it.
+        <b>Your log is saved to your account</b> and syncs across every device you sign in on. Photo estimates are AI-generated — review them before saving.
         <div style="margin-top:14px;font-weight:700;color:var(--ink)">Add it to your home screen:</div>
         <div class="steps">
           <div class="step"><span class="n"></span><span class="t">Open this page in <b>Safari</b> on your iPhone.</span></div>
@@ -1016,11 +1200,26 @@ function openSheet(html){ sheet.innerHTML=html; scrim.classList.add("on"); }
 function closeSheet(){ scrim.classList.remove("on"); }
 scrim.addEventListener("click", e=>{ if(e.target===scrim) closeSheet(); });
 
+/* Downscale a photo on-device before upload (fast, keeps the request small). */
+function resizeImage(file, max=1024, q=0.82){
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(file); const img=new Image();
+    img.onload=()=>{
+      let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+      const k=Math.min(1, max/Math.max(w,h)); w=Math.max(1,Math.round(w*k)); h=Math.max(1,Math.round(h*k));
+      const c=document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url); resolve(c.toDataURL("image/jpeg", q));
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); reject(new Error("bad image")); };
+    img.src=url;
+  });
+}
+
 /* Add-food sheet */
 function openAdd(mealKey){
   lastMeal=mealKey;
   const meal=MEAL_BY[mealKey];
-  const addState={view:"search", q:"", picked:null, qty:100, mode:"search"};
+  const addState={view:"search", q:"", picked:null, qty:100, mode:"search", photo:{step:"pick", preview:"", est:null, error:"", hint:""}};
 
   function shell(inner){
     return `<div class="grip"></div>
@@ -1030,26 +1229,75 @@ function openAdd(mealKey){
   }
   function results(q){
     const s=q.trim().toLowerCase();
-    const r=FOODS.filter(f=>!s||f.name.toLowerCase().includes(s)).slice(0,40);
+    const r=FOODS.filter(f=>!s||f.name.toLowerCase().includes(s)||f.tag.includes(s)||(TAG_LABEL[f.tag]||"").toLowerCase().includes(s)).slice(0,50);
     if(!r.length) return `<div class="nores">No match for “${esc(q)}”.<br>Use the Custom tab to add it yourself.</div>`;
     return r.map(f=>{
-      const idx=FOODS.indexOf(f); const ts=TAG_STYLE[f.tag];
+      const idx=FOODS.indexOf(f); const ts=TAG_STYLE[f.tag]||TAG_STYLE.indian;
       return `<button class="litem pressable" data-pick="${idx}">
         <div><div class="fi-name">${esc(f.name)}</div>
           <div class="fi-meta num">${f.per==="piece"?"per piece":"per 100g"} · ${f.cal} kcal · P${f.p} C${f.c} F${f.f}</div></div>
-        <span class="tagdot" style="background:${ts.bg};color:${ts.c}">${f.tag}</span>
+        <span class="tagdot" style="background:${ts.bg};color:${ts.c}">${TAG_LABEL[f.tag]||f.tag}</span>
       </button>`;
     }).join("");
   }
   function searchView(){
     return `<div class="seg">
-        <button class="${addState.mode==="search"?"on":""}" data-mode="search">Search foods</button>
+        <button class="${addState.mode==="search"?"on":""}" data-mode="search">Search</button>
+        <button class="${addState.mode==="photo"?"on":""}" data-mode="photo">${ICONS.camera(14)} Photo</button>
         <button class="${addState.mode==="custom"?"on":""}" data-mode="custom">Custom</button>
       </div>
       ${ addState.mode==="search" ? `
-        <div class="search">${ICONS.search(16)}<input id="qIn" placeholder="dal, paneer, oats, coffee…" value="${esc(addState.q)}"></div>
+        <div class="search">${ICONS.search(16)}<input id="qIn" placeholder="dosa, chutney, maiz, protein…" value="${esc(addState.q)}"></div>
         <div class="list" id="resList">${results(addState.q)}</div>
-      ` : customView() }`;
+      ` : addState.mode==="photo" ? photoView() : customView() }`;
+  }
+  function photoView(){
+    const ph=addState.photo;
+    if(ph.step==="analyzing"){
+      return `<div class="photo-wrap">
+        <img class="photo-prev" src="${ph.preview}" alt="">
+        <div class="photo-status"><span class="spin"></span> Analyzing your plate…</div>
+        <div class="photo-fine">Usually takes a few seconds.</div>
+      </div>`;
+    }
+    if(ph.step==="error"){
+      return `<div class="photo-wrap">
+        ${ph.preview?`<img class="photo-prev" src="${ph.preview}" alt="">`:""}
+        <div class="photo-err">${esc(ph.error)}</div>
+        <button class="btn-primary pressable" data-act="photoRetake">${ICONS.camera(17)} Try another photo</button>
+      </div>`;
+    }
+    if(ph.step==="result" && ph.est){
+      const e=ph.est;
+      const conf={low:["Low confidence","#C9304A","#FCEAEC"],medium:["Medium confidence","#B5791A","#FDF0DA"],high:["High confidence","#0E8A5F","#E0F5EE"]}[e.confidence]||["Estimate","#5A4FE8","#ECEAFC"];
+      return `<div class="photo-wrap">
+        <img class="photo-prev" src="${ph.preview}" alt="">
+        <div class="photo-conf" style="background:${conf[2]};color:${conf[1]}">${conf[0]} · AI estimate — adjust anything before saving</div>
+        <div class="field"><label>Food</label><input id="pf_name" value="${esc(e.name)}"></div>
+        <div class="field"><label>Portion</label><input id="pf_portion" value="${esc(e.portion)}"></div>
+        <div class="grid2" style="margin-bottom:12px">
+          <div class="field"><label>Calories</label><input type="number" inputmode="decimal" id="pf_calories" value="${e.calories}"></div>
+          <div class="field"><label>Protein g</label><input type="number" inputmode="decimal" id="pf_protein" value="${e.protein}"></div>
+          <div class="field"><label>Carbs g</label><input type="number" inputmode="decimal" id="pf_carbs" value="${e.carbs}"></div>
+          <div class="field"><label>Fats g</label><input type="number" inputmode="decimal" id="pf_fats" value="${e.fats}"></div>
+          <div class="field"><label>Fiber g</label><input type="number" inputmode="decimal" id="pf_fiber" value="${e.fiber}"></div>
+        </div>
+        ${e.notes?`<div class="photo-note">${ICONS.bulb(14)}<span>${esc(e.notes)}</span></div>`:""}
+        <button class="btn-primary pressable" data-act="addPhoto">${ICONS.check(17)} Add to ${meal.label}</button>
+        <button class="btn-ghost pressable" data-act="photoRetake">${ICONS.camera(13)} Retake</button>
+      </div>`;
+    }
+    return `<div class="photo-wrap">
+      <label class="photo-drop pressable">
+        <input type="file" id="photoIn" accept="image/*" style="display:none">
+        <div class="photo-drop-ico">${ICONS.camera(28)}</div>
+        <div class="photo-drop-t">Take or choose a photo</div>
+        <div class="photo-drop-s">We'll estimate calories and macros for what's on the plate</div>
+      </label>
+      <div class="field" style="margin-top:14px"><label>Optional — tell us what it is</label>
+        <input id="photoHint" placeholder="e.g. 2 idlis with coconut chutney" value="${esc(ph.hint||"")}"></div>
+      <div class="photo-fine">A photo can't show hidden oil or exact portions, so treat this as a starting point — you'll review it before saving.</div>
+    </div>`;
   }
   function customView(){
     const fields=[["calories","Calories"],["protein","Protein g"],["carbs","Carbs g"],["fats","Fats g"],["fiber","Fiber g"]];
@@ -1103,6 +1351,30 @@ function openAdd(mealKey){
       const name=(document.getElementById("cf_name").value||"").trim(); if(!name) return;
       const g=k=>parseFloat(document.getElementById("cf_"+k).value)||0;
       addItem(mealKey,{name, qtyLabel:"custom", calories:g("calories"), protein:g("protein"), carbs:g("carbs"), fats:g("fats"), fiber:g("fiber")});
+      closeSheet();
+    });
+    // photo → AI estimate
+    const photoIn=document.getElementById("photoIn");
+    if(photoIn){ photoIn.addEventListener("change", async e=>{
+      const file=e.target.files&&e.target.files[0]; if(!file) return;
+      try{
+        const dataUrl=await resizeImage(file, 1024, 0.82);
+        addState.photo={...addState.photo, step:"analyzing", preview:dataUrl, error:""}; mount();
+        const r=await fetch("/api/analyze",{ method:"POST", credentials:"same-origin", headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({ image:dataUrl.split(",")[1], mediaType:"image/jpeg", hint:(addState.photo.hint||"").trim() }) });
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok){ addState.photo={...addState.photo, step:"error", error:j.message||"Analysis failed — please try again."}; mount(); return; }
+        addState.photo={...addState.photo, step:"result", est:j.estimate}; mount();
+      }catch(err){ addState.photo={...addState.photo, step:"error", error:"Couldn't read that image — try another photo."}; mount(); }
+    }); }
+    const hintIn=document.getElementById("photoHint");
+    if(hintIn){ hintIn.addEventListener("input", e=>{ addState.photo.hint=e.target.value; }); }
+    sheet.querySelector('[data-act="photoRetake"]')?.addEventListener("click",()=>{ addState.photo={step:"pick", preview:"", est:null, error:"", hint:addState.photo.hint||""}; mount(); });
+    sheet.querySelector('[data-act="addPhoto"]')?.addEventListener("click",()=>{
+      const name=(document.getElementById("pf_name").value||"").trim(); if(!name) return;
+      const g=k=>parseFloat(document.getElementById("pf_"+k).value)||0;
+      const portion=(document.getElementById("pf_portion").value||"").trim()||"1 serving";
+      addItem(mealKey,{name, qtyLabel:portion, calories:g("calories"), protein:g("protein"), carbs:g("carbs"), fats:g("fats"), fiber:g("fiber")});
       closeSheet();
     });
     // portion
@@ -1191,6 +1463,7 @@ document.getElementById("app").addEventListener("click", e=>{
 });
 
 /* ───────────────── boot ───────────────── */
+const GOOGLE_G=`<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.5 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.5-4.1 7-10.2 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 000 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.3 0 11.7-2.1 15.6-5.7l-7.6-5.9c-2.1 1.4-4.8 2.3-8 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>`;
 function startApp(){
   const t=store.get("targets"); if(t) state.targets={...DEFAULT_TARGETS,...t};
   const mnt=store.get("maintenance"); if(mnt) state.maintenance=mnt;
@@ -1198,34 +1471,27 @@ function startApp(){
   loadDay();
   render();
 }
-function showLock(err){
+function showSignIn(err){
+  const msgs={ not_allowed:"This Google account isn't on the access list for this app.", email_unverified:"Your Google email isn't verified." };
+  const msg = err ? (msgs[err] || "Sign-in didn't complete — please try again.") : "";
   const wrap=document.createElement("div");
   wrap.className="lockwrap"; wrap.id="lock";
   wrap.innerHTML=`<div class="lockcard">
     <div class="lockicon">${ICONS.flame(28)}</div>
     <div class="lock-t">MacroLog</div>
-    <div class="lock-s">Enter your passcode to unlock your tracker.</div>
-    <input id="lockInput" class="lock-input num" type="password" inputmode="numeric" placeholder="Passcode" autocomplete="current-password"/>
-    <div class="lock-err" id="lockErr">${err||""}</div>
-    <button class="btn-primary pressable" id="lockBtn" style="margin-top:2px">Unlock</button>
+    <div class="lock-s">Sign in to keep your food log synced across all your devices.</div>
+    <a class="btn-google pressable" href="/api/auth/login">${GOOGLE_G} Continue with Google</a>
+    <div class="lock-err">${msg}</div>
+    <div class="lock-fine">Your data is private to your account.</div>
   </div>`;
   document.body.appendChild(wrap);
-  const go=async()=>{
-    const v=(document.getElementById("lockInput").value||"").trim();
-    if(!v) return;
-    setPass(v);
-    const btn=document.getElementById("lockBtn"); btn.textContent="Checking…";
-    const r=await store.load();
-    if(r==="unauthorized"){ document.getElementById("lockErr").textContent="Incorrect passcode — try again."; btn.textContent="Unlock"; return; }
-    wrap.remove(); startApp();
-  };
-  document.getElementById("lockBtn").addEventListener("click", go);
-  document.getElementById("lockInput").addEventListener("keydown", e=>{ if(e.key==="Enter") go(); });
-  setTimeout(()=>{ const i=document.getElementById("lockInput"); if(i) i.focus(); }, 120);
 }
 async function boot(){
+  const params=new URLSearchParams(location.search);
+  const authErr=params.get("auth_error");
+  if(authErr) history.replaceState(null,"",location.pathname);
   const r=await store.load();
-  if(r==="unauthorized"){ showLock(); return; }
+  if(r==="unauthorized"){ showSignIn(authErr); return; }
   startApp();
 }
 boot();
